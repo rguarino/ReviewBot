@@ -43,20 +43,42 @@ class Run(models.Model):
     ran_manually = models.BooleanField(default=False)
 
     def __unicode__(self):
-        ended = (str(self.time_finished) if self.finished else "The Furute")
-        print ended
-        return "%s :%s - %s"% (self.name, str(self.time_started), ended)
+        if self.finished:
+            results = "%s :%s - %s" & (self.name, str(self.time_started), str(self.time_finished))
+        else:
+            isfinished()
+            ended = (str(self.time_finished) if self.finished else "The Furute")
+            results = "%s :%s - %s" % (self.name, str(self.time_started), ended)
+        return results
 
     def isfinished(self):
         results = True
         for tool in self.toolstatus_set.all():
-            if tool.queued() or tool.running():
+            status = tool.status
+            if status == ToolStatus.QUEUED or status == ToolStatus.RUNNING:
                 results = False
+        self.finished = results
         return results
 
 class ToolStatus(models.Model):
     """A instance of a tool that has been ran. It will keep
     track of the status of the tool during this run."""
+    QUEUED = "Q"
+    RUNNING = "R"
+    SUCCEDED = "S"
+    FAILED = "F"
+    TIMEOUT = "T"
+
+    STATUSES = (
+        (QUEUED, 'Queued'),
+        (RUNNING, 'Running'),
+        (SUCCEDED, 'Succeded'),
+        (FAILED, 'Failed'),
+        (TIMEOUT, 'Timeout'),
+    )
+
+    status = models.CharField(max_length=1,choices=STATUSES,
+        db_index=True)
     name = models.CharField(max_length=128, blank=False)
     tool = models.ForeignKey(ReviewBotTool)
     run = models.ForeignKey(Run)
@@ -69,67 +91,14 @@ class ToolStatus(models.Model):
     location = models.CharField(max_length=128, blank=True)
     message = models.CharField(max_length=256, blank=True)
 
-    def current(self):
-        if(self.queued() == True and self.running() == False):
-            return 1
-        elif(self.running() and not self.suceed() ):
-            return 2
-        elif(self.failed()):
-            return 3
-        elif(self.suceed()):
-            return 4
-        elif(self.timeout()):
-            return 5
-
-    def current_str(self, id = 0):
-        if(id == 0):
-            id = self.current()
-        if(id == 1):
-            return "Queued"
-        if(id == 2):
-            return "Running"
-        if(id == 3):
-            return "Failed"
-        if(id == 4):
-            return "Success"
-        if(id == 5):
-            return "Timeout"
-
-    def queued(self):
-        if queued_time != None & running_time == None:
-            return True
-        else:
-            return False
-
-    def running(self):
-        if running_time != None & suceeded_time == None:
-            return True
-        else:
-            return False
-
-    def suceed(self):
-        if suceeded_time != None & failed_time == None & time_out_time == None:
-            return True
-        else:
-            return False
 
     def error(self, locoation, error):
-        if failed_time != None:
+        if self.failed_time != None:
             failed_time = timezone.now()
         self.location = location
         self.messgae = error
 
-    def failed(self):
-        if failed_time != None:
-            return True
-        else:
-            return False
 
-    def timeout(self):
-        if time_out_time != None:
-            return True
-        else:
-            return False
 
     def __unicode__(self):
         return "%s (%s)"% (self.tool, self.queued_time)

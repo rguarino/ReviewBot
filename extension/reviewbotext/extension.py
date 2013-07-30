@@ -127,7 +127,9 @@ class ReviewBotExtension(Extension):
             review_settings['open_issues'] = tool.open_issues
             payload['review_settings'] = review_settings
 
-            toolStatus = ToolStatus(tool=tool, run=run)
+            from django.utils import timezone
+            toolStatus = ToolStatus(tool=tool, run=run, queued_time=timezone.now())
+            toolStatus.status = toolStatus.QUEUED
             toolStatus.save()
             print "%s.%s" % (tool.entry_point, tool.version)
             try:

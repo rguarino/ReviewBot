@@ -1,20 +1,41 @@
 {% extends "base.html" %}
 {% load djblets_deco %}
 {% load i18n %}
+{% load reviewtags %}
+{% load staticfiles %}
 {% block title %}{% trans "Run Status" %}{% endblock %}
 
+
+
+{% block scripts-post %}
+<script type="text/javascript" src="{% static "djblets/js/datagrid.js" %}"></script>
+{% endblock %}
+
+{% block contenttag%}<div id = "content" class="flex">{% endblock %}
+
 {% block content %}
-{% box "Run Status" %}
-
-<div class="main">
-    <p>{% trans "Run status details" %}</p>
-
-    
+{% box "details" %}
+    <h1 class="title">{{run.name}} </h1>
     <p>
-
+        Review: <a href= "{{info.root_url}}r/{{run.reviewrequest.id}}/">{{run.reviewrequest.summary}}</a></br>
+        Method: {{info.method}}</br>
+        Status: {{info.status}}</br>
     </p>
 
+    <h2>Tools:</h2>
+    <table id='tool' border='1'>
+        <tr>
+            <th>Name</th>
+            <th>Status</th>
+        </tr>
+        {% for tool in tools%}
+        <tr>
+            <td>{{ tool.name }}</td>
+            <td>{{ tool.status}}</td>
+        </ul>
+        {% endfor %}
+    </table>
+</br></br>
 </div>
-
 {% endbox %}
-{% endblock%}
+{% endblock %}
