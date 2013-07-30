@@ -18,7 +18,7 @@
 
   <p>
     {% for run in runs %}
-      <b> {{run.name}} </b> </br>
+      <b> <a href="{{url}}logging/runs/{{run.id}}/"> {{run.name}} </a> </b> </br>
       {% for tool in run.tools %}
         {{tool}} </br>
       {% endfor %}

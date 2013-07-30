@@ -3,20 +3,29 @@
 {% load i18n %}
 {% block title %}{% trans "Tool Status" %}{% endblock %}
 
+{% block contenttag%}<div id = "content" class="flex">{% endblock %}
+
 {% block content %}
-{% box "Tool Status" %}
-
-<div class="main">
-    <p>{% trans "Tool status details" %}</p>
-
-    <p>
-        <b> {{run.name}} </b> </br>
-        <ul>
-            <li> {{info.status}} </li>
-            <li> {{info.method}} </li>
+{% box "ToolStatus" %}
+ <h1 class="title">{{info.name}}</h1>
+ <p>
+    Run: <a href="{{info.root_url}}logging/runs/{{status.run.id}}/">{{status.run.name}}</a></br>
+    Review: <a href= "{{info.root_url}}r/{{status.run.reviewrequest.id}}/">{{status.run.reviewrequest.summary}}</a></br>
+    Tool Name: {{info.name}}
+    Status: {{info.status}}
+    <h2>Times:</h2>
+    <table id='tool' border='1'>
+        <tr>
+            <th>Event</th>
+            <th>Value</th>
+        </tr>
+        {% for event, time in times%}
+        <tr>
+            <td>{{ event }}</td>
+            <td>{{ time }}</td>
         </ul>
-    </p>
-</div>
-
+        {% endfor %}
+    </table>
+ </p>
 {% endbox %}
 {% endblock%}
