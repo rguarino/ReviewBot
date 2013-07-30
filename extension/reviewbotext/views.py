@@ -10,12 +10,6 @@ def logging_dashboard(request, template_name='logging/list.html'):
     extension = \
         extension_manager.get_enabled_extension(ReviewBotExtension.id)
 
-    workers = extension.celery.control.inspect()
-    registered = workers.registered()
-    worker_names = []
-    for worker in registered:
-        worker_names.append(worker)
-
     runs_info = []
     rawRuns = Run.objects.all()
     for run in rawRuns:
@@ -29,12 +23,7 @@ def logging_dashboard(request, template_name='logging/list.html'):
         run_info['id'] = run.id
         runs_info.append(run_info)
 
-    from reviewbotext.extension import ReviewBotExtension
-    extension_manager = get_extension_manager()
-    extension = \
-        extension_manager.get_enabled_extension(ReviewBotExtension.id)
-    return render_to_response(template_name, {'workers': worker_names, 'runs': runs_info,\
-        'url': extension._rb_url()})
+    return render_to_response(template_name, { 'runs': runs_info, 'url': extension._rb_url()})
 
 
 def run_status_details(request, run_id=1, template_name='logging/run_status.html'):

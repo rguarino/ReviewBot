@@ -6,16 +6,7 @@
 {% block content%}
 {% box "Logging" %}
 <div class="main">
-  <p>{% trans "Current regestered workers" %}</p>
-
-  <p>
-    {% for worker in workers %}
-    <b>{{worker}}</b> </br>
-    {% endfor %}
-  </p>
-
-  <p>{% trans "Current runs" %}</p>
-
+  <h2>{% trans "Current runs" %}</h2>
   <p>
     {% for run in runs %}
       <b> <a href="{{url}}logging/runs/{{run.id}}/"> {{run.name}} </a> </b> </br>
