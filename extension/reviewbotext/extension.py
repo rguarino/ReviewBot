@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.conf.urls.defaults import patterns, include
 from django.contrib.auth import login
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
@@ -13,10 +14,14 @@ from djblets.webapi.resources import register_resource_for_model, \
 from reviewboard.extensions.base import Extension
 from reviewboard.extensions.hooks import DiffViewerActionHook, \
                                          ReviewRequestActionHook, \
-                                         TemplateHook
+                                         TemplateHook, \
+                                         DashboardHook, \
+                                         URLHook
+
+from reviewboard.reviews.models import ReviewRequest
 
 from reviewbotext.handlers import SignalHandlers
-from reviewbotext.models import ReviewBotTool
+from reviewbotext.models import ReviewBotTool, Run, ToolStatus
 from reviewbotext.resources import review_bot_review_resource, \
                                    review_bot_tool_resource, \
                                    review_bot_trigger_review_resource
@@ -52,6 +57,18 @@ class ReviewBotExtension(Extension):
                                           'base-scripts-post',
                                           'reviewbot_hook_action.html')
 
+        self.url_hook = URLHook(self, patterns('',
+            (r'^logging/', include('reviewbotext.urls'))))
+
+        self.dashboard_hook = DashboardHook(
+            self,
+            entries = [
+                {
+                    'label': 'Logging',
+                    'url': settings.SITE_ROOT + "logging/",
+                }
+            ] )
+
     def add_action_hooks(self):
         actions = [{
             'id': 'reviewbot-link',
@@ -67,7 +84,7 @@ class ReviewBotExtension(Extension):
         unregister_resource_for_model(ReviewBotTool)
         super(ReviewBotExtension, self).shutdown()
 
-    def notify(self, request_payload, selected_tools=None):
+    def notify(self, request_payload, selected_tools=None, ran_manually=False):
         """Add the request to the queue."""
 
         self.celery.conf.BROKER_URL = self.settings['BROKER_URL']
@@ -97,18 +114,30 @@ class ReviewBotExtension(Extension):
             tools = ReviewBotTool.objects.filter(enabled=True,
                                                  run_automatically=True)
 
+
+        review = ReviewRequest.objects.get(id=request_payload['review_request_id'])
+
+        run = Run(name="%s [%s]" % ("Review", review.summary), ran_manually=ran_manually,\
+            reviewrequest= review)
+
+        run.save()
         for tool in tools:
             review_settings['ship_it'] = tool.ship_it
             review_settings['comment_unmodified'] = tool.comment_unmodified
             review_settings['open_issues'] = tool.open_issues
             payload['review_settings'] = review_settings
 
+            toolStatus = ToolStatus(tool=tool, run=run)
+            toolStatus.save()
+            print "%s.%s" % (tool.entry_point, tool.version)
             try:
                 self.celery.send_task(
                     "reviewbot.tasks.ProcessReviewRequest",
                     [payload, tool.tool_settings],
                     queue='%s.%s' % (tool.entry_point, tool.version))
-            except:
+            except Exception, e:
+                toolStatus.error("Queuing", str(e))
+                toolStatus.save()
                 raise
 
     def _login_user(self, user_id):
@@ -140,6 +169,11 @@ class ReviewBotExtension(Extension):
             'url': self._rb_url(),
         }
         self.celery.control.broadcast('update_tools_list', payload=payload)
+
+    def send_ping(self):
+        """Broadcast a ping to all the clients"""
+        self.celery.conf.BROKER_URL = self.settings['BROKER_URL']
+        self.celery.control.ping(timeout=0.5)
 
     def _rb_url(self):
         """Returns a valid reviewbot url including http protocol."""

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load djblets_deco %}
+{% load i18n %}
+{% block title %}{% trans "Logging" %}{% endblock %}
+
+{% block content%}
+{% box "Logging" %}
+<div class="main">
+  <p>{% trans "Current regestered workers" %}</p>
+
+  <p>
+    {% for worker in workers %}
+    <b>{{worker}}</b> </br>
+    {% endfor %}
+  </p>
+
+  <p>{% trans "Current runs" %}</p>
+
+  <p>
+    {% for run in runs %}
+      <b> {{run.name}} </b> </br>
+      {% for tool in run.tools %}
+        {{tool}} </br>
+      {% endfor %}
+    {% endfor %}
+  </p>
+
+</div>
+
+
+
+{% endbox%}
+{% endblock%}

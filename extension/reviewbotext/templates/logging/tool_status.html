@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load djblets_deco %}
+{% load i18n %}
+{% block title %}{% trans "Tool Status" %}{% endblock %}
+
+{% block content %}
+{% box "Tool Status" %}
+
+<div class="main">
+    <p>{% trans "Tool status details" %}</p>
+
+    <p>
+        <b> {{run.name}} </b> </br>
+        <ul>
+            <li> {{info.status}} </li>
+            <li> {{info.method}} </li>
+        </ul>
+    </p>
+</div>
+
+{% endbox %}
+{% endblock%}

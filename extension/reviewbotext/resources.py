@@ -15,7 +15,7 @@ from reviewboard.webapi.decorators import webapi_check_local_site
 from reviewboard.webapi.resources import WebAPIResource, \
                                          review_request_resource
 
-from reviewbotext.models import ReviewBotTool
+from reviewbotext.models import ReviewBotTool, ToolStatus, Run
 
 
 class ReviewBotReviewResource(WebAPIResource):
@@ -250,6 +250,34 @@ class ReviewBotToolResource(WebAPIResource):
 
 review_bot_tool_resource = ReviewBotToolResource()
 
+class ReviewBotLoggerResource(WebAPIResource):
+    """
+    Resource that provides logging information about reviewboard instance.
+
+    Can be called form within the ReviewBoard UI for the purpose of gathering
+    information about the curent state of the workers.
+    """
+
+    name = 'review_bot_logger'
+    allowed_method = ('GET',)
+
+
+    #TODO
+
+class RevewBotStatusResource( WebAPIResource):
+    """
+    Resource that provides logging information about 
+    """
+
+class ReviewBotRunResource(WebAPIResource):
+    """
+    Resource that allows posting multiple tool output with one review 
+    """
+    name = 'review_bot_run'
+    allowed_methods = ('POST')
+
+    reviews = []
+    #TODO
 
 class ReviewBotTriggerReviewResource(WebAPIResource):
     """Resource that triggers a set of ReviewBot reviews given a list of tools
@@ -321,7 +349,7 @@ class ReviewBotTriggerReviewResource(WebAPIResource):
         if has_diff:
             request_payload['diff_revision'] = diff_revision
 
-        extension.notify(request_payload, tools)
+        extension.notify(request_payload, tools, ran_manually=True)
 
         # TODO: Fix the result key here.
         return 201, {}
